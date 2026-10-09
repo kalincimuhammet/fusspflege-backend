@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Fusspflege.Api/Fusspflege.Api.csproj" />
+    <Project Path="src/Fusspflege.Core/Fusspflege.Core.csproj" />
+    <Project Path="src/Fusspflege.Infrastructure/Fusspflege.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Fusspflege.Tests/Fusspflege.Tests.csproj" />
+  </Folder>
+</Solution>
