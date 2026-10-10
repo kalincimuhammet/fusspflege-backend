@@ -2,6 +2,7 @@ using Fusspflege.Core.Interfaces;
 using Fusspflege.Core.Services;
 using Fusspflege.Infrastructure.Data;
 using Fusspflege.Infrastructure.Email;
+using Fusspflege.Infrastructure.Jobs;
 using Fusspflege.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddSingleton<SlotCalculator>();
 builder.Services.AddScoped<BookingService>();
+builder.Services.AddScoped<AppointmentService>();
 
 // E-Mail: Provider per Konfiguration wählbar (Console oder Acs)
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(EmailOptions.SectionName));
@@ -25,6 +27,10 @@ if (string.Equals(builder.Configuration["Email:Provider"], "Acs", StringComparis
 else
     builder.Services.AddSingleton<IEmailSender, ConsoleEmailSender>();
 builder.Services.AddScoped<BookingEmailService>();
+
+// Erinnerungen: Logik als Service, Timer als Hintergrunddienst
+builder.Services.AddScoped<ReminderService>();
+builder.Services.AddHostedService<ReminderBackgroundService>();
 
 var app = builder.Build();
 

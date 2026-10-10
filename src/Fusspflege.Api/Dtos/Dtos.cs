@@ -40,3 +40,11 @@ public record AppointmentCreatedResponse(
     DateTime StartUtc,
     DateTime EndUtc,
     string TreatmentName);
+
+
+public record AppointmentDetailsDto(
+    DateTime StartUtc,
+    DateTime EndUtc,
+    string TreatmentName,
+    string Status,
+    bool CanCancel);

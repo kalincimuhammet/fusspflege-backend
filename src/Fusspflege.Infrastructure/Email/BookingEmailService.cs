@@ -52,4 +52,31 @@ public class BookingEmailService
                 "Bestätigungsmail für Termin {AppointmentId} konnte nicht gesendet werden", booking.AppointmentId);
         }
     }
+
+    // Wirft bei Fehlern absichtlich, damit der Erinnerungsjob den Versand erneut versuchen kann
+    public async Task SendReminderAsync(
+        string email, string firstName, string treatmentName, DateTime startUtc, CancellationToken ct = default)
+    {
+        var (subject, html, text) = EmailTemplates.Reminder(
+            firstName, treatmentName, startUtc, _options.BusinessName, _options.ContactInfo);
+
+        await _sender.SendAsync(new OutgoingEmail(email, firstName, subject, html, text), ct);
+    }
+
+    public async Task SendCancellationAsync(
+        string email, string firstName, string treatmentName, DateTime startUtc, CancellationToken ct = default)
+    {
+        try
+        {
+            var (subject, html, text) = EmailTemplates.Cancellation(
+                firstName, treatmentName, startUtc, _options.BusinessName, _options.PublicBaseUrl);
+
+            await _sender.SendAsync(new OutgoingEmail(email, firstName, subject, html, text), ct);
+        }
+        catch (Exception ex)
+        {
+            // Die Absage ist schon gespeichert, ein Mailfehler darf sie nicht rückgängig machen
+            _logger.LogError(ex, "Absagemail an {Email} konnte nicht gesendet werden", email);
+        }
+    }
 }

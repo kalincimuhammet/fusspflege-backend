@@ -14,4 +14,6 @@ public class EmailOptions
     public string PublicBaseUrl { get; set; } = "http://localhost:4200";
 
     public string BusinessName { get; set; } = "Mobile Fußpflege";
+    // Kontaktdaten, die in der Erinnerungsmail stehen (z. B. Telefonnummer), leer = kein Hinweis
+    public string ContactInfo { get; set; } = string.Empty;
 }
