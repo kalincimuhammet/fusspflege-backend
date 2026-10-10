@@ -14,9 +14,14 @@ public class AppDbContext : DbContext
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<AppointmentLog> AppointmentLogs => Set<AppointmentLog>();
 
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();
+        configurationBuilder.Properties<DateTime?>().HaveConversion<NullableUtcDateTimeConverter>();
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Findet automatisch alle Konfigurationsklassen im Ordner Configurations
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
 }

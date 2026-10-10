@@ -15,7 +15,9 @@ public class SlotCalculator
     {
         _tz = timeZone ?? TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
     }
-
+    // Welches Berliner Datum gehört zu einem UTC-Zeitpunkt?
+    public DateOnly ToLocalDate(DateTime utc) =>
+        DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(utc, _tz));
     public IReadOnlyList<TimeSlot> GetFreeSlots(
         DateOnly date,
         int durationMinutes,

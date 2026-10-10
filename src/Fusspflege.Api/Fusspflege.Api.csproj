@@ -13,11 +13,16 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.3.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Fusspflege.Core\Fusspflege.Core.csproj" />
     <ProjectReference Include="..\Fusspflege.Infrastructure\Fusspflege.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Dtos\" />
   </ItemGroup>
 
 </Project>
