@@ -1,9 +1,12 @@
 ﻿using Fusspflege.Core.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fusspflege.Infrastructure.Data;
 
-public class AppDbContext : DbContext
+// IdentityDbContext bringt die Tabellen für Benutzer, Rollen und Zuordnungen mit
+public class AppDbContext : IdentityDbContext<IdentityUser>
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -22,6 +25,8 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Wichtig: zuerst die Identity-Konfiguration, danach unsere eigene
+        base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
 }
