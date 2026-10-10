@@ -11,6 +11,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
+// CORS: nur die Adressen des Frontends dürfen die API aufrufen
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                     ?? Array.Empty<string>();
+builder.Services.AddCors(options =>
+    options.AddPolicy("Frontend", policy => policy
+        .WithOrigins(allowedOrigins)
+        .WithMethods("GET", "POST")
+        .WithHeaders("Content-Type")));
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("Default"),
@@ -32,6 +41,7 @@ builder.Services.AddScoped<BookingEmailService>();
 builder.Services.AddScoped<ReminderService>();
 builder.Services.AddHostedService<ReminderBackgroundService>();
 
+// Ab hier sind keine Services mehr hinzufügbar
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -44,7 +54,11 @@ if (app.Environment.IsDevelopment())
     await DbSeeder.SeedAsync(db);
 }
 
-app.UseHttpsRedirection();
+// In der Entwicklung ohne Umleitung auf HTTPS, sonst scheitern Browser-Anfragen von Angular an der Weiterleitung
+if (!app.Environment.IsDevelopment())
+    app.UseHttpsRedirection();
+
+app.UseCors("Frontend");
 app.MapControllers();
 
 app.Run();
