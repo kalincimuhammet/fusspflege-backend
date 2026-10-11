@@ -74,6 +74,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddSingleton<SlotCalculator>();
 builder.Services.AddScoped<BookingService>();
 builder.Services.AddScoped<AppointmentService>();
+builder.Services.AddScoped<AdminAppointmentService>();
 
 // E-Mail: Provider per Konfiguration wählbar (Console oder Acs)
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(EmailOptions.SectionName));
