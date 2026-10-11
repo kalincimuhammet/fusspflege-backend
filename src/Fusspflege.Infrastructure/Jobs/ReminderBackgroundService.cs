@@ -1,12 +1,14 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Fusspflege.Core.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Fusspflege.Infrastructure.Jobs;
 
+// Läuft einmal täglich. Ein häufigerer Takt würde die Serverless-Datenbank am Pausieren hindern und Kosten verursachen.
 public class ReminderBackgroundService : BackgroundService
 {
-    private static readonly TimeSpan Interval = TimeSpan.FromMinutes(15);
+    private const int MaxAttempts = 3;
 
     private readonly IServiceScopeFactory _scopes;
     private readonly ILogger<ReminderBackgroundService> _logger;
@@ -21,15 +23,14 @@ public class ReminderBackgroundService : BackgroundService
     {
         try
         {
-            // Kurze Pause, damit die App beim Start erst vollständig hochfährt
-            await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
-
-            using var timer = new PeriodicTimer(Interval);
-            do
+            while (!stoppingToken.IsCancellationRequested)
             {
-                await RunSafelyAsync(stoppingToken);
+                var wait = ReminderSchedule.TimeUntilNextRun(DateTime.UtcNow);
+                _logger.LogInformation("Nächster Erinnerungslauf in {Wait}", wait);
+
+                await Task.Delay(wait, stoppingToken);
+                await RunWithRetryAsync(stoppingToken);
             }
-            while (await timer.WaitForNextTickAsync(stoppingToken));
         }
         catch (OperationCanceledException)
         {
@@ -37,21 +38,27 @@ public class ReminderBackgroundService : BackgroundService
         }
     }
 
-    private async Task RunSafelyAsync(CancellationToken ct)
+    // Die Datenbank kann nach einer Pause erst verzögert antworten, deshalb bis zu drei Versuche
+    private async Task RunWithRetryAsync(CancellationToken ct)
     {
-        try
+        for (var attempt = 1; attempt <= MaxAttempts; attempt++)
         {
-            // Pro Durchlauf ein eigener Scope, weil der DbContext kurzlebig ist
-            using var scope = _scopes.CreateScope();
-            var reminders = scope.ServiceProvider.GetRequiredService<ReminderService>();
+            try
+            {
+                using var scope = _scopes.CreateScope();
+                var reminders = scope.ServiceProvider.GetRequiredService<ReminderService>();
 
-            var sent = await reminders.RunOnceAsync(DateTime.UtcNow, ct);
-            if (sent > 0)
-                _logger.LogInformation("{Count} Erinnerung(en) versendet", sent);
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            _logger.LogError(ex, "Fehler im Erinnerungsjob");
+                var sent = await reminders.RunOnceAsync(DateTime.UtcNow, ct);
+                _logger.LogInformation("Erinnerungslauf beendet, {Count} Erinnerung(en) versendet", sent);
+                return;
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                _logger.LogError(ex, "Erinnerungslauf fehlgeschlagen (Versuch {Attempt} von {Max})", attempt, MaxAttempts);
+
+                if (attempt < MaxAttempts)
+                    await Task.Delay(TimeSpan.FromMinutes(2), ct);
+            }
         }
     }
 }
