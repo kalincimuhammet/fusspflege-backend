@@ -1,0 +1,21 @@
+name: Daily reminders
+
+on:
+  schedule:
+    # 09:05 UTC = 10:05 Uhr Winterzeit bzw. 11:05 Uhr Sommerzeit in Berlin.
+    # Die API versendet Erinnerungen erst ab 10:00 Uhr Berliner Zeit.
+    - cron: '5 9 * * *'
+  workflow_dispatch:
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      # Der kostenlose Tarif schläft nach Leerlauf. Dieser Aufruf weckt die App, daher die Wiederholungen.
+      - name: Trigger reminder run
+        run: |
+          curl --fail --silent --show-error \
+            --retry 5 --retry-delay 30 --retry-all-errors --max-time 120 \
+            --request POST \
+            --header "X-Api-Key: ${{ secrets.REMINDER_TRIGGER_KEY }}" \
+            "${{ vars.API_URL }}/api/internal/run-reminders"
