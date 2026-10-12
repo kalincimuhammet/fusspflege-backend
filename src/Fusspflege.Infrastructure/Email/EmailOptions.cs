@@ -16,4 +16,7 @@ public class EmailOptions
     public string BusinessName { get; set; } = "Mobile Fußpflege";
     // Kontaktdaten, die in der Erinnerungsmail stehen (z. B. Telefonnummer), leer = kein Hinweis
     public string ContactInfo { get; set; } = string.Empty;
+
+    // Empfänger der Benachrichtigungen an die Praxis, leer = keine Benachrichtigung
+    public string AdminNotificationAddress { get; set; } = string.Empty;
 }

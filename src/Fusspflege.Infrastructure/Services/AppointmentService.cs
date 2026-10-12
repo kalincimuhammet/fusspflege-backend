@@ -11,7 +11,7 @@ public enum CancelResult { Success, NotFound, AlreadyCancelled, TooLate, NotCanc
 public record AppointmentView(
     DateTime StartUtc, DateTime EndUtc, string TreatmentName, AppointmentStatus Status, bool CanCancel);
 
-public record CancelledNotice(string Email, string FirstName, string TreatmentName, DateTime StartUtc);
+public record CancelledNotice(string Email, string FirstName, string TreatmentName, DateTime StartUtc, string LastName = "");
 
 public record CancelOutcome(CancelResult Result, CancelledNotice? Notice = null);
 
@@ -83,7 +83,7 @@ public class AppointmentService
 
         return new CancelOutcome(
             CancelResult.Success,
-            new CancelledNotice(a.Customer.Email, a.Customer.FirstName, a.Treatment.Name, a.StartUtc));
+            new CancelledNotice(a.Customer.Email, a.Customer.FirstName, a.Treatment.Name, a.StartUtc, a.Customer.LastName));
     }
 
     private static bool IsPlausible(string token) =>

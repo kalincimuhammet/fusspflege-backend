@@ -44,6 +44,15 @@ public class AppointmentsController : ControllerBase
 
         await _emails.SendConfirmationAsync(r, ct);
 
+        // Die Praxis bekommt ebenfalls eine Nachricht (nur wenn eine Adresse konfiguriert ist)
+        var customer = new CustomerContact(
+            $"{request.FirstName.Trim()} {request.LastName.Trim()}",
+            request.Email.Trim(),
+            request.Street.Trim(),
+            request.PostalCode.Trim(),
+            request.City.Trim());
+        await _emails.SendAdminBookingNotificationAsync(r, customer, ct);
+
         return StatusCode(StatusCodes.Status201Created,
             new AppointmentCreatedResponse(r.AppointmentId, r.StartUtc, r.EndUtc, r.TreatmentName));
     }
@@ -80,6 +89,7 @@ public class AppointmentsController : ControllerBase
 
         var n = outcome.Notice!;
         await _emails.SendCancellationAsync(n.Email, n.FirstName, n.TreatmentName, n.StartUtc, ct);
+        await _emails.SendAdminCancellationNotificationAsync(n, ct);
 
         return NoContent();
     }

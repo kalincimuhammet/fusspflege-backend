@@ -143,4 +143,90 @@ public static class EmailTemplates
 
         return (subject, html, text);
     }
+
+    public static (string Subject, string Html, string Text) AdminNewBooking(
+        string treatmentName, DateTime startUtc, DateTime endUtc, CustomerContact customer, string adminUrl)
+    {
+        var when = FormatDateTime(startUtc);
+        var minutes = (int)(endUtc - startUtc).TotalMinutes;
+        var address = $"{customer.Street}, {customer.PostalCode} {customer.City}";
+
+        var treatment = WebUtility.HtmlEncode(treatmentName);
+        var name = WebUtility.HtmlEncode(customer.FullName);
+        var email = WebUtility.HtmlEncode(customer.Email);
+        var addressHtml = WebUtility.HtmlEncode(address);
+        var link = WebUtility.HtmlEncode(adminUrl);
+
+        // Im Betreff steht bewusst nichts, was der Kunde eingegeben hat
+        var subject = $"Neue Buchung: {treatmentName} am {when}";
+
+        var html = $"""
+            <div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;color:#222;line-height:1.5">
+              <h2 style="margin-bottom:4px">Neue Buchung</h2>
+              <table style="border-collapse:collapse;margin:12px 0">
+                <tr><td style="padding:4px 16px 4px 0;color:#666">Behandlung</td><td><strong>{treatment}</strong></td></tr>
+                <tr><td style="padding:4px 16px 4px 0;color:#666">Termin</td><td><strong>{when}</strong> ({minutes} Minuten)</td></tr>
+                <tr><td style="padding:4px 16px 4px 0;color:#666">Kunde</td><td>{name}</td></tr>
+                <tr><td style="padding:4px 16px 4px 0;color:#666">E-Mail</td><td><a href="mailto:{email}">{email}</a></td></tr>
+                <tr><td style="padding:4px 16px 4px 0;color:#666">Adresse</td><td>{addressHtml}</td></tr>
+              </table>
+              <p><a href="{link}">Im Admin-Bereich öffnen</a></p>
+            </div>
+            """;
+
+        var text = $"""
+            Neue Buchung
+
+            Behandlung: {treatmentName}
+            Termin: {when} ({minutes} Minuten)
+            Kunde: {customer.FullName}
+            E-Mail: {customer.Email}
+            Adresse: {address}
+
+            Im Admin-Bereich öffnen: {adminUrl}
+            """;
+
+        return (subject, html, text);
+    }
+
+    public static (string Subject, string Html, string Text) AdminCancellation(
+        string treatmentName, DateTime startUtc, string customerName, string customerEmail, string adminUrl)
+    {
+        var when = FormatDateTime(startUtc);
+
+        var treatment = WebUtility.HtmlEncode(treatmentName);
+        var name = WebUtility.HtmlEncode(customerName);
+        var email = WebUtility.HtmlEncode(customerEmail);
+        var link = WebUtility.HtmlEncode(adminUrl);
+
+        var subject = $"Termin abgesagt: {treatmentName} am {when}";
+
+        var html = $"""
+            <div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;color:#222;line-height:1.5">
+              <h2 style="margin-bottom:4px">Termin vom Kunden abgesagt</h2>
+              <table style="border-collapse:collapse;margin:12px 0">
+                <tr><td style="padding:4px 16px 4px 0;color:#666">Behandlung</td><td><strong>{treatment}</strong></td></tr>
+                <tr><td style="padding:4px 16px 4px 0;color:#666">Termin</td><td><strong>{when}</strong></td></tr>
+                <tr><td style="padding:4px 16px 4px 0;color:#666">Kunde</td><td>{name}</td></tr>
+                <tr><td style="padding:4px 16px 4px 0;color:#666">E-Mail</td><td><a href="mailto:{email}">{email}</a></td></tr>
+              </table>
+              <p>Die Zeit ist wieder buchbar.</p>
+              <p><a href="{link}">Im Admin-Bereich öffnen</a></p>
+            </div>
+            """;
+
+        var text = $"""
+            Termin vom Kunden abgesagt
+
+            Behandlung: {treatmentName}
+            Termin: {when}
+            Kunde: {customerName}
+            E-Mail: {customerEmail}
+
+            Die Zeit ist wieder buchbar.
+            Im Admin-Bereich öffnen: {adminUrl}
+            """;
+
+        return (subject, html, text);
+    }
 }

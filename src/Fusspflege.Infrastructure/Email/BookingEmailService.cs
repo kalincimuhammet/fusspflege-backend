@@ -79,4 +79,50 @@ public class BookingEmailService
             _logger.LogError(ex, "Absagemail an {Email} konnte nicht gesendet werden", email);
         }
     }
+
+    // Benachrichtigt die Praxis über eine neue Buchung. Ohne konfigurierte Adresse passiert nichts.
+    public async Task SendAdminBookingNotificationAsync(
+        BookingResult booking, CustomerContact customer, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(_options.AdminNotificationAddress))
+            return;
+
+        try
+        {
+            var adminUrl = $"{_options.PublicBaseUrl.TrimEnd('/')}/admin/termine";
+            var (subject, html, text) = EmailTemplates.AdminNewBooking(
+                booking.TreatmentName, booking.StartUtc, booking.EndUtc, customer, adminUrl);
+
+            await _sender.SendAsync(
+                new OutgoingEmail(_options.AdminNotificationAddress, _options.BusinessName, subject, html, text), ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Admin-Benachrichtigung für Termin {AppointmentId} konnte nicht gesendet werden", booking.AppointmentId);
+        }
+    }
+
+    // Benachrichtigt die Praxis, wenn ein Kunde selbst storniert hat
+    public async Task SendAdminCancellationNotificationAsync(
+        CancelledNotice notice, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(_options.AdminNotificationAddress))
+            return;
+
+        try
+        {
+            var adminUrl = $"{_options.PublicBaseUrl.TrimEnd('/')}/admin/termine";
+            var customerName = $"{notice.FirstName} {notice.LastName}".Trim();
+            var (subject, html, text) = EmailTemplates.AdminCancellation(
+                notice.TreatmentName, notice.StartUtc, customerName, notice.Email, adminUrl);
+
+            await _sender.SendAsync(
+                new OutgoingEmail(_options.AdminNotificationAddress, _options.BusinessName, subject, html, text), ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Admin-Benachrichtigung über Stornierung konnte nicht gesendet werden");
+        }
+    }
 }
