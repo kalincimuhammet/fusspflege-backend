@@ -9,6 +9,7 @@ public class AcsEmailSender : IEmailSender
 {
     private readonly EmailClient _client;
     private readonly string _senderAddress;
+    private readonly string _replyToAddress;
 
     public AcsEmailSender(IOptions<EmailOptions> options)
     {
@@ -19,6 +20,7 @@ public class AcsEmailSender : IEmailSender
 
         _client = new EmailClient(o.AcsConnectionString);
         _senderAddress = o.SenderAddress;
+        _replyToAddress = o.ReplyToAddress;
     }
 
     public async Task SendAsync(OutgoingEmail email, CancellationToken ct = default)
@@ -31,6 +33,10 @@ public class AcsEmailSender : IEmailSender
 
         var recipients = new EmailRecipients(new[] { new EmailAddress(email.ToAddress, email.ToName) });
         var message = new Azure.Communication.Email.EmailMessage(_senderAddress, recipients, content);
+
+        // Antworten sollen im echten Postfach landen
+        if (!string.IsNullOrWhiteSpace(_replyToAddress))
+            message.ReplyTo.Add(new EmailAddress(_replyToAddress));
 
         if (email.Attachment is not null)
         {

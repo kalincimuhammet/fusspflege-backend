@@ -19,4 +19,7 @@ public class EmailOptions
 
     // Empfänger der Benachrichtigungen an die Praxis, leer = keine Benachrichtigung
     public string AdminNotificationAddress { get; set; } = string.Empty;
+
+    // Antworten der Kunden gehen an diese Adresse (z. B. das Postfach der Praxis), leer = Absenderadresse
+    public string ReplyToAddress { get; set; } = string.Empty;
 }
